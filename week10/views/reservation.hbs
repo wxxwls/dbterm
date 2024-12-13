@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            padding: 0;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            background: #fff;
+            margin: 10px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        }
+        ul li button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        ul li .update-btn {
+            background-color: #4CAF50;
+        }
+        ul li .update-btn:hover {
+            background-color: #45A049;
+        }
+        ul li .cancel-btn {
+            background-color: #FF5722;
+        }
+        ul li .cancel-btn:hover {
+            background-color: #E64A19;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{title}}</h1>
+    {{#if reservations.length}}
+        <ul>
+            {{#each reservations}}
+            <li>
+                <strong>Book Title:</strong> {{Book_Title}}<br>
+                <strong>Reservation Date:</strong> {{Reservation_date}}<br>
+                <strong>Pickup Time:</strong> {{Pickup_time}}<br>
+                <strong>Book ISBN:</strong> {{Book_ISBN}}
+                <!-- Update Pickup Time -->
+                <form method="POST" action="/customer/reservation/update" style="margin-top: 10px;">
+                    <label for="pickupTime-{{ID}}">Update Pickup Time:</label>
+                    <input type="time" name="pickupTime" id="pickupTime-{{ID}}" required>
+                    <input type="hidden" name="reservationId" value="{{ID}}">
+                    <button type="submit" class="update-btn">Update</button>
+                </form>
+                <!-- Cancel Reservation -->
+                <form method="POST" action="/customer/reservation/cancel" style="margin-top: 10px;">
+                    <input type="hidden" name="reservationId" value="{{ID}}">
+                    <button type="submit" class="cancel-btn">Cancel</button>
+                </form>
+            </li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p style="text-align: center;">You have no reservations.</p>
+    {{/if}}
+</body>
+</html>

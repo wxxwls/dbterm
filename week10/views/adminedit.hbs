@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">{{title}}</h1>
+
+        <!-- Book 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>도서 목록 (Book)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ISBN</th>
+                        <th>Title</th>
+                        <th>Year</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Author_ID</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each books}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Book">
+                            <td><input type="text" name="ISBN" value="{{this.ISBN}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Title" value="{{this.Title}}" class="form-control"></td>
+                            <td><input type="number" name="Year" value="{{this.Year}}" class="form-control"></td>
+                            <td><input type="text" name="Category" value="{{this.Category}}" class="form-control"></td>
+                            <td><input type="text" name="Price" value="{{this.Price}}" class="form-control"></td>
+                            <td><input type="number" name="Author_ID" value="{{this.Author_ID}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Author 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>저자 목록 (Author)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Address</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each authors}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Author">
+                            <td><input type="number" name="ID" value="{{this.ID}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Name" value="{{this.Name}}" class="form-control"></td>
+                            <td><input type="text" name="URL" value="{{this.URL}}" class="form-control"></td>
+                            <td><input type="text" name="Address" value="{{this.Address}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Award 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>수상 목록 (Award)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Author_ID</th>
+                        <th>Book_ISBN</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each awards}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Award">
+                            <td><input type="number" name="ID" value="{{this.ID}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Name" value="{{this.Name}}" class="form-control"></td>
+                            <td><input type="number" name="Year" value="{{this.Year}}" class="form-control"></td>
+                            <td><input type="number" name="Author_ID" value="{{this.Author_ID}}" class="form-control"></td>
+                            <td><input type="text" name="Book_ISBN" value="{{this.Book_ISBN}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Warehouse 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>창고 목록 (Warehouse)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Address</th>
+                        <th>Phone</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each warehouses}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Warehouse">
+                            <td><input type="text" name="Code" value="{{this.Code}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Address" value="{{this.Address}}" class="form-control"></td>
+                            <td><input type="text" name="Phone" value="{{this.Phone}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inventory 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>재고 목록 (Inventory)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Book_ISBN</th>
+                        <th>Warehouse_Code</th>
+                        <th>Number</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each inventories}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Inventory">
+                            <td><input type="text" name="Book_ISBN" value="{{this.Book_ISBN}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Warehouse_Code" value="{{this.Warehouse_Code}}" readonly class="form-control"></td>
+                            <td><input type="number" name="Number" value="{{this.Number}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contains 조회 및 수정 -->
+        <div class="mt-4">
+            <h2>장바구니 내용 (Contains)</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Shopping_Basket_ID</th>
+                        <th>Book_ISBN</th>
+                        <th>Number</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each contains}}
+                    <tr>
+                        <form method="POST" action="/admin/edit">
+                            <input type="hidden" name="tableName" value="Contains">
+                            <td><input type="number" name="Shopping_basket_BasketID" value="{{this.Shopping_basket_BasketID}}" readonly class="form-control"></td>
+                            <td><input type="text" name="Book_ISBN" value="{{this.Book_ISBN}}" readonly class="form-control"></td>
+                            <td><input type="number" name="Number" value="{{this.Number}}" class="form-control"></td>
+                            <td><button type="submit" class="btn btn-primary">수정</button></td>
+                        </form>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

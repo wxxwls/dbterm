@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INHA Bookstore</title>
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+        .frame {
+            border-radius: 15px;
+            box-sizing: border-box;
+            border: 1px solid #757575;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 350px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #id, #passwd, .btn {
+            font-size: 20px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .btn {
+            width: 100%;
+            margin-top: 20px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="frame">
+        <h1>INHA Bookstore</h1>
+        <form id="department" method="post" action="/">
+            <div class="id">
+                <input id="id" name="id" type="text" required placeholder="ID">
+            </div>
+            <div class="pwd">
+                <input id="passwd" name="password" type="password" required placeholder="비밀번호">
+            </div>
+            <button class="btn" type="submit">로그인</button>
+        </form>
+    </div>
+</body>
+</html>
