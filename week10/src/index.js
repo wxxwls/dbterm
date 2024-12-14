@@ -2,7 +2,7 @@ import express from 'express';
 import logger from 'morgan';
 import path from 'path';
 import expressSession from 'express-session';
-
+import hbs from 'hbs';
 import loginRouter from '../routes/login';
 import adminRouter from '../routes/admin';
 import admininsertRouter from '../routes/admininsert'; // 경로 수정
@@ -12,9 +12,13 @@ import customerRouter from '../routes/customer';
 import bookSearchRouter from '../routes/bookSearch';
 import reservationRouter from '../routes/reservation';
 
+
 const PORT = 3000;
 
 const app = express();
+hbs.registerHelper('eq', function (a, b) {
+    return a === b;
+});
 
 app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.urlencoded({ extended: false }));

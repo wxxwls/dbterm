@@ -77,17 +77,15 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        ul li .cart-btn {
-            background-color: #2196F3;
-        }
-        ul li .cart-btn:hover {
-            background-color: #1976D2;
-        }
         ul li .reserve-btn {
             background-color: #FF5722;
         }
         ul li .reserve-btn:hover {
             background-color: #E64A19;
+        }
+        ul li .reserve-btn:disabled {
+            background-color: #bbb;
+            cursor: not-allowed;
         }
         p {
             text-align: center;
@@ -136,16 +134,28 @@
                 <strong>Title:</strong> {{this.Title}} |
                 <strong>Category:</strong> {{this.Category}} |
                 <strong>Year:</strong> {{this.Year}} |
-                <strong>Price:</strong> {{this.Price}}
+                <strong>Price:</strong> {{this.Price}} |
+                <strong>Stock:</strong> {{this.Total_Stock}}
                 <form>
                     <label for="pickupTime-{{this.ISBN}}">Pickup Time:</label>
-                    <input type="time" id="pickupTime-{{this.ISBN}}" required>
-                    <button type="button" class="reserve-btn" onclick="reserveBook('{{this.ISBN}}')">Reserve</button>
+                    <input 
+                        type="time" 
+                        id="pickupTime-{{this.ISBN}}" 
+                        required 
+                        {{#if (eq this.Total_Stock 0)}}disabled{{/if}}>
+                    <button 
+                        type="button" 
+                        class="reserve-btn" 
+                        onclick="reserveBook('{{this.ISBN}}', '{{this.Total_Stock}}')" 
+                        {{#if (eq this.Total_Stock 0)}}disabled{{/if}}>
+                        {{#if (eq this.Total_Stock 0)}}Out of Stock{{else}}Reserve{{/if}}
+                    </button>
                 </form>
             </li>
             {{/each}}
         </ul>
     {{/if}}
+
 
     <!-- 초기 전체 데이터 표시 -->
     {{#if books.length}}
@@ -156,11 +166,22 @@
                 <strong>Title:</strong> {{this.Title}} |
                 <strong>Category:</strong> {{this.Category}} |
                 <strong>Year:</strong> {{this.Year}} |
-                <strong>Price:</strong> {{this.Price}}
+                <strong>Price:</strong> {{this.Price}} |
+                <strong>Stock:</strong> {{this.Total_Stock}}
                 <form>
                     <label for="pickupTime-{{this.ISBN}}">Pickup Time:</label>
-                    <input type="time" id="pickupTime-{{this.ISBN}}" required>
-                    <button type="button" class="reserve-btn" onclick="reserveBook('{{this.ISBN}}')">Reserve</button>
+                    <input 
+                        type="time" 
+                        id="pickupTime-{{this.ISBN}}" 
+                        required 
+                        {{#if (eq this.Total_Stock 0)}}disabled{{/if}}>
+                    <button 
+                        type="button" 
+                        class="reserve-btn" 
+                        onclick="reserveBook('{{this.ISBN}}', '{{this.Total_Stock}}')" 
+                        {{#if (eq this.Total_Stock 0)}}disabled{{/if}}>
+                        {{#if (eq this.Total_Stock 0)}}Out of Stock{{else}}Reserve{{/if}}
+                    </button>
                 </form>
             </li>
             {{/each}}
@@ -170,40 +191,44 @@
     {{/if}}
 
     <script>
-        function addToCart(bookId) {
-            alert(`Book with ISBN ${bookId} added to cart!`);
+        function reserveBook(bookId, stock) {
+    if (parseInt(stock, 10) <= 0) {
+        alert("This book is out of stock!");
+        return;
+    }
+
+    const userEmail = "{{loggedInUserEmail}}"; // 현재 로그인한 사용자 이메일
+    const pickupTimeInput = document.querySelector(`#pickupTime-${bookId}`);
+    const pickupTime = pickupTimeInput ? pickupTimeInput.value : null;
+
+    if (!pickupTime) {
+        alert("Please set a valid pickup time.");
+        return;
+    }
+
+    console.log('Book ID:', bookId);
+    console.log('Pickup Time:', pickupTime);
+
+    fetch('/customer/reservation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail, bookId, pickupTime }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Reservation successful!');
+        } else {
+            alert(data.message || "Reservation failed.");
         }
-
-        function reserveBook(bookId) {
-            const userEmail = "{{loggedInUserEmail}}"; // 현재 로그인한 사용자 이메일
-            const pickupTimeInput = document.querySelector(`#pickupTime-${bookId}`);
-            const pickupTime = pickupTimeInput ? pickupTimeInput.value : null;
-
-            if (!pickupTime) {
-                alert("Please set a valid pickup time.");
-                return;
-            }
-
-            fetch('/customer/reservation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userEmail, bookId, pickupTime }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Reservation successful!');
-                } else {
-                    alert('Reservation failed. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
     </script>
 </body>
 </html>
