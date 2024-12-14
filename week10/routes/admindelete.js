@@ -6,7 +6,7 @@ const router = express.Router();
 // 관리자 삭제 페이지 조회
 router.get('/delete', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Admin') {
-        return res.redirect('/'); // 로그인하지 않거나 Admin이 아니면 홈으로 리다이렉트
+        return res.redirect('/'); 
     }
 
     const books = await selectSql.getBook();
@@ -27,9 +27,9 @@ router.get('/delete', async (req, res) => {
     });
 });
 
-// 삭제 요청 처리
+// 관리자 페이지 삭제 요청 처리
 router.post('/delete', async (req, res) => {
-    const { tableName, identifier1, identifier2 } = req.body; // identifier1은 기본 식별자, identifier2는 조합 키에 사용
+    const { tableName, identifier1, identifier2 } = req.body; 
 
     if (tableName === 'Book') {
         await deleteSql.deleteBook(identifier1);

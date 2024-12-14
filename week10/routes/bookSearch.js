@@ -1,5 +1,5 @@
 import express from "express";
-import { selectSql, createSql } from "../database/sql";
+import { selectSql, createSql, promisePool } from "../database/sql"; 
 
 const router = express.Router();
 
@@ -43,26 +43,33 @@ router.post("/bookSearch", async (req, res) => {
     });
 });
 
-// 예약 처리 라우트 (로그인 상태 확인 추가)
 router.post("/reservation", checkLoggedIn, async (req, res) => {
     const { bookId, pickupTime } = req.body;
     const userEmail = req.session.user.id; // 로그인된 사용자의 이메일
 
+    // 책 재고 확인
     const books = await selectSql.getBooknumber();
     const book = books.find((b) => b.ISBN === bookId);
 
     if (!book || book.Total_Stock <= 0) {
-        return res.json({ success: false, message: "Book out of stock." });
+        return res.json({ success: false, message: "책의 재고가 없습니다." });
     }
 
     try {
-        await createSql.addReservation({ userEmail, bookId, pickupTime });
+        // 예약 추가 시도 (10분 내 중복 확인 포함)
+        await createSql.addReservation10({ userEmail, bookId, pickupTime });
         res.json({ success: true });
     } catch (error) {
-        console.error("Error creating reservation:", error);
-        res.json({ success: false, message: "Failed to create reservation." });
+        console.error("예약 생성 중 오류:", error.message);
+        if (error.message.includes("10분 이내로 겹칩니다")) {
+            res.status(400).json({ success: false, message: error.message });
+        } else {
+            res.status(500).json({ success: false, message: "예약 생성 실패." });
+        }
     }
 });
+
+
 
 router.post("/addToCart", checkLoggedIn, async (req, res) => {
     const { bookId } = req.body; // 책 ID

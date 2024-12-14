@@ -6,13 +6,13 @@ const router = express.Router();
 // 예약 내역 조회 및 업데이트/취소 처리
 router.get("/reservation", async (req, res) => {
     if (!req.session.user || req.session.user.role !== "Customer") {
-        return res.redirect("/"); // 로그인 확인
+        return res.redirect("/"); 
     }
 
-    const userEmail = req.session.user.id;
+    const userEmail = req.session.user.id; 
 
     try {
-        const reservations = await selectSql.getReservationsByEmail(userEmail);
+        const reservations = await selectSql.getReservationsByEmail(userEmail); 
         res.render("reservation", {
             title: "My Reservations",
             reservations,
@@ -23,12 +23,16 @@ router.get("/reservation", async (req, res) => {
     }
 });
 
-// Pickup Time 업데이트 (POST)
+
+// Pickup Time 수정
 router.post("/reservation/update", async (req, res) => {
+    // 세션에서 현재 사용자의 이메일 가져오기
+    const userEmail = req.session.user.id;
+
     const { reservationId, pickupTime } = req.body;
 
     try {
-        await updateSql.updatePickupTime({ reservationId, pickupTime });
+        await updateSql.updatePickupTime({ reservationId, pickupTime, userEmail });
         res.redirect("/customer/reservation");
     } catch (error) {
         console.error("Error updating pickup time:", error);
@@ -36,7 +40,7 @@ router.post("/reservation/update", async (req, res) => {
     }
 });
 
-// 예약 취소 (POST)
+// 예약 취소 
 router.post("/reservation/cancel", async (req, res) => {
     const { reservationId } = req.body;
 

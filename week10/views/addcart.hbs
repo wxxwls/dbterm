@@ -64,13 +64,13 @@
         .buy-btn {
             background-color: #008CBA;
             color: white;
-            font-size: 18px; /* 크기 증가 */
-            padding: 15px 30px; /* 버튼 크기 확대 */
+            font-size: 18px; 
+            padding: 15px 30px; 
             border: none;
             border-radius: 8px;
             cursor: pointer;
             display: block;
-            margin: 30px auto; /* 가운데 정렬 */
+            margin: 30px auto; 
             text-align: center;
         }
         .buy-btn:hover {
@@ -161,7 +161,7 @@
 
                 if (result.success) {
                     alert("Purchase completed successfully!");
-                    window.location.href = "/customer/buy"; // 구매 요약 페이지로 이동
+                    window.location.href = "/customer/buy"; 
                 } else {
                     alert(result.message || "Purchase failed.");
                 }
@@ -171,7 +171,6 @@
             }
         }
 
-        // Buy Now 버튼 클릭 이벤트 등록
         document.getElementById("purchaseButton").addEventListener("click", buyNow);
     </script>
 </body>

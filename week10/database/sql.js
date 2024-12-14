@@ -11,7 +11,7 @@
     });
 
     const promisePool = pool.promise();
-
+    export const promisePoolConnection = promisePool;
     export const selectSql = {
         getUser: async () => {
             const sql = `select * from user`;
@@ -162,13 +162,8 @@
                     SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
                 );
             `;
-            try {
-                const [rows] = await promisePool.query(sql, [userEmail]);
-                return rows;
-            } catch (error) {
-                console.error("Error in getCartItems:", error);
-                throw error;
-            }
+            const [rows] = await promisePool.query(sql, [userEmail]); // 사용자 이메일 필터링
+            return rows;
         },
         getBookStock: async (bookISBN) => {
             const sql = `
@@ -292,19 +287,63 @@
             const [result] = await promisePool.query(sql, [data.bookISBN, data.userEmail]);
             return result;
         },
+        addReservation10: async (data) => {
+            const connection = await promisePool.getConnection(); // DB 연결
+            try {
+                await connection.beginTransaction(); // 트랜잭션 시작
         
+                // 10분 이내 충돌 체크 (기존 예약과 새 예약의 겹침 확인)
+                const conflictQuery = `
+                    SELECT *
+                    FROM Reservation
+                    WHERE Book_ISBN = ?
+                    AND (
+                        (Pickup_time BETWEEN DATE_SUB(?, INTERVAL 10 MINUTE) AND DATE_ADD(?, INTERVAL 10 MINUTE))
+                        OR (DATE_SUB(Pickup_time, INTERVAL 10 MINUTE) <= ? AND DATE_ADD(Pickup_time, INTERVAL 10 MINUTE) >= ?)
+                    )
+                `;
+                const [conflicts] = await connection.query(conflictQuery, [
+                    data.bookId,
+                    data.pickupTime, // 새로 추가될 예약의 시작 시간 - 10분
+                    data.pickupTime, // 새로 추가될 예약의 끝 시간 + 10분
+                    data.pickupTime, // 새 예약 시간의 중심
+                    data.pickupTime, // 새 예약 시간의 중심
+                ]);
         
+                if (conflicts.length > 0) {
+                    await connection.rollback(); // 충돌 시 롤백
+                    throw new Error("새 예약이 기존 예약과 10분 이내로 겹칩니다."); // 에러 발생
+                }
         
+                // 예약 추가
+                const addReservationQuery = `
+                    INSERT INTO Reservation (User_Email, Book_ISBN, Reservation_date, Pickup_time)
+                    VALUES (?, ?, NOW(), ?)
+                `;
+                await connection.query(addReservationQuery, [data.userEmail, data.bookId, data.pickupTime]);
+        
+                await connection.commit(); // 트랜잭션 커밋
+                return { success: true };
+            } catch (error) {
+                await connection.rollback(); // 에러 발생 시 롤백
+                console.error("예약 추가 중 오류:", error);
+                throw error;
+            } finally {
+                connection.release(); // 연결 반환
+            }
+        }
     };
+        
+        
 
     export const updateSql = {
-        updateBook: async (data) => {
+        updateBook: async (connection, data) => {
             const sql = `
                 UPDATE Book
                 SET Title = ?, Year = ?, Category = ?, Price = ?, Author_ID = ?
                 WHERE ISBN = ?
             `;
-            const [result] = await promisePool.query(sql, [
+            const [result] = await connection.query(sql, [
                 data.Title,
                 data.Year,
                 data.Category,
@@ -314,13 +353,13 @@
             ]);
             return result;
         },
-        updateAuthor: async (data) => {
+        updateAuthor: async (connection, data) => {
             const sql = `
                 UPDATE Author
                 SET Name = ?, URL = ?, Address = ?
                 WHERE ID = ?
             `;
-            const [result] = await promisePool.query(sql, [
+            const [result] = await connection.query(sql, [
                 data.Name,
                 data.URL,
                 data.Address,
@@ -328,13 +367,13 @@
             ]);
             return result;
         },
-        updateAward: async (data) => {
+        updateAward: async (connection, data) => {
             const sql = `
                 UPDATE Award
                 SET Name = ?, Year = ?, Author_ID = ?, Book_ISBN = ?
                 WHERE ID = ?
             `;
-            const [result] = await promisePool.query(sql, [
+            const [result] = await connection.query(sql, [
                 data.Name,
                 data.Year,
                 data.Author_ID,
@@ -343,20 +382,88 @@
             ]);
             return result;
         },
-        updateWarehouse: async (data) => {
+        updateWarehouse: async (connection, data) => {
             const sql = `
                 UPDATE Warehouse
                 SET Address = ?, Phone = ?
                 WHERE Code = ?
             `;
-            const [result] = await promisePool.query(sql, [
+            const [result] = await connection.query(sql, [
                 data.Address,
                 data.Phone,
                 data.Code,
             ]);
             return result;
         },
-        updateInventory: async (data) => {
+        updateInventory: async (connection, data) => {
+            const sql = `
+                UPDATE Inventory
+                SET Number = ?
+                WHERE Book_ISBN = ? AND Warehouse_Code = ?
+            `;
+            const [result] = await connection.query(sql, [
+                data.Number,
+                data.Book_ISBN,
+                data.Warehouse_Code,
+            ]);
+            return result;
+        },
+        updateContains: async (connection, data) => {
+            const sql = `
+                UPDATE Contains
+                SET Number = ?
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = ?
+            `;
+            const [result] = await connection.query(sql, [
+                data.Number,
+                data.Book_ISBN,
+                data.Shopping_basket_BasketID,
+            ]);
+            return result;
+        },
+        updatePickupTime: async (data) => {
+            const sql = `
+                UPDATE Reservation
+                SET Pickup_time = ?
+                WHERE ID = ? 
+            `;
+            const [result] = await promisePool.query(sql, [data.pickupTime, data.reservationId]);
+            return result;
+        },
+        
+        updatecart: async (data) => {
+            if (!data.quantity || !data.bookISBN || !data.userEmail) {
+                throw new Error('Invalid input data: Quantity, Book ISBN, or User Email is missing.');
+            }
+        
+            const sql = `
+                UPDATE Contains
+                SET Number = ?
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
+                )
+            `;
+            try {
+                const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN, data.userEmail]);
+                if (result.affectedRows === 0) {
+                    throw new Error(`Update failed. No matching cart item found for Book ISBN: ${data.bookISBN}`);
+                }
+                return result;
+            } catch (error) {
+                console.error("Error in updatecart:", error);
+                throw error;
+            }
+        },
+        updatestock: async (data) => {
+            const sql = `
+                UPDATE Inventory
+                SET Number = Number - ?
+                WHERE Book_ISBN = ?
+            `;
+            const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN]);
+            return result;
+        },
+        updatebuy: async (data) => {
             const sql = `
                 UPDATE Inventory
                 SET Number = ?
@@ -369,60 +476,6 @@
             ]);
             return result;
         },
-        updateContains: async (data) => {
-            const sql = `
-                UPDATE Contains
-                SET Number = ?
-                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = ?
-            `;
-            const [result] = await promisePool.query(sql, [
-                data.Number,
-                data.Book_ISBN,
-                data.Shopping_basket_BasketID,
-            ]);
-            return result;
-        },
-        updatePickupTime: async (data) => {
-            const sql = `
-                UPDATE Reservation
-                SET Pickup_time = ?
-                WHERE ID = ?
-            `;
-            const [result] = await promisePool.query(sql, [data.pickupTime, data.reservationId]);
-            return result;
-        },
-        updateCartQuantity: async (data) => {
-            const sql = `
-                UPDATE Contains
-                SET Number = ?
-                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
-                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ? LIMIT 1
-                );
-            `;
-            const [result] = await promisePool.query(sql, [data.newQuantity, data.bookISBN, data.userEmail]);
-            return result;
-        },
-        updatecart: async (data) => {
-            const sql = `
-                UPDATE Contains
-                SET Number = ?
-                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
-                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
-                )
-            `;
-            const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN, data.userEmail]);
-            return result;
-        },
-        updatestock: async (data) => {
-            const sql = `
-                UPDATE Inventory
-                SET Number = Number - ?
-                WHERE Book_ISBN = ?
-            `;
-            const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN]);
-            return result;
-        },
-        
     };
 
     export const deleteSql = {
@@ -470,16 +523,7 @@
             const [result] = await promisePool.query(sql, [reservationId]);
             return result;
         },
-        deleteCartItem: async (data) => {
-            const sql = `
-                DELETE FROM Contains
-                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
-                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ? LIMIT 1
-                );
-            `;
-            const [result] = await promisePool.query(sql, [data.bookISBN, data.userEmail]);
-            return result;
-        },
+       
         deletecart: async (bookISBN, userEmail) => {
             const sql = `
                 DELETE FROM Contains
