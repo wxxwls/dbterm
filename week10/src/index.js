@@ -12,6 +12,7 @@ import customerRouter from '../routes/customer';
 import bookSearchRouter from '../routes/bookSearch';
 import reservationRouter from '../routes/reservation';
 import addcartRouter from '../routes/addcart';
+import buyRouter from '../routes/buy';
 
 
 const PORT = 3000;
@@ -46,6 +47,7 @@ app.use('/customer', customerRouter);
 app.use('/customer', bookSearchRouter);
 app.use('/customer', reservationRouter);
 app.use('/customer', addcartRouter);
+app.use('/customer', buyRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);

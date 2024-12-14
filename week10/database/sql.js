@@ -126,6 +126,16 @@
                 throw error;
             }
         },
+        getBookStock: async (bookISBN) => {
+            const sql = `
+                SELECT IFNULL(SUM(Number), 0) AS Stock
+                FROM Inventory
+                WHERE Book_ISBN = ?
+            `;
+            const [rows] = await promisePool.query(sql, [bookISBN]);
+            return rows[0].Stock;
+        },
+        
     };
 
     export const createSql = {
@@ -337,6 +347,27 @@
             const [result] = await promisePool.query(sql, [data.newQuantity, data.bookISBN, data.userEmail]);
             return result;
         },
+        updatecart: async (data) => {
+            const sql = `
+                UPDATE Contains
+                SET Number = ?
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
+                )
+            `;
+            const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN, data.userEmail]);
+            return result;
+        },
+        updatestock: async (data) => {
+            const sql = `
+                UPDATE Inventory
+                SET Number = Number - ?
+                WHERE Book_ISBN = ?
+            `;
+            const [result] = await promisePool.query(sql, [data.quantity, data.bookISBN]);
+            return result;
+        },
+        
     };
 
     export const deleteSql = {
@@ -394,4 +425,23 @@
             const [result] = await promisePool.query(sql, [data.bookISBN, data.userEmail]);
             return result;
         },
-    };
+        deletecart: async (bookISBN, userEmail) => {
+            const sql = `
+                DELETE FROM Contains
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
+                )
+            `;
+            const [result] = await promisePool.query(sql, [bookISBN, userEmail]);
+            return result;
+        },
+        clearCart: async (userEmail) => {
+            const sql = `
+                DELETE FROM Contains
+                WHERE Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
+                )
+            `;
+            await promisePool.query(sql, [userEmail]);
+                },
+    }

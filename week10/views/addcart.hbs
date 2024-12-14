@@ -27,6 +27,8 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             max-width: 600px;
+            display: flex;
+            flex-direction: column;
         }
         ul li button {
             margin-top: 10px;
@@ -43,6 +45,29 @@
         .remove-btn:hover {
             background-color: #E64A19;
         }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quantity-controls button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .quantity-controls button:hover {
+            background-color: #45A049;
+        }
+        .buy-btn {
+            background-color: #008CBA;
+            margin-top: 20px;
+        }
+        .buy-btn:hover {
+            background-color: #007BB5;
+        }
     </style>
 </head>
 <body>
@@ -53,16 +78,93 @@
             <li>
                 <strong>Title:</strong> {{Title}}<br>
                 <strong>Price:</strong> {{Price}}<br>
-                <strong>Quantity:</strong> {{Number}}
-                <form method="POST" action="/customer/addcart/remove" style="margin-top: 10px;">
-                    <input type="hidden" name="bookISBN" value="{{Book_ISBN}}">
-                    <button type="submit" class="remove-btn">Remove</button>
-                </form>
+                <strong>Quantity:</strong>
+                <div class="quantity-controls">
+                    <button onclick="updateQuantity('{{Book_ISBN}}', -1)">-</button>
+                    <span id="quantity-{{Book_ISBN}}">{{Number}}</span>
+                    <button onclick="updateQuantity('{{Book_ISBN}}', 1)">+</button>
+                </div>
+                <button onclick="removeFromCart('{{Book_ISBN}}')" class="remove-btn">Remove</button>
             </li>
             {{/each}}
         </ul>
+        <button id="purchaseButton" class="buy-btn">Buy Now</button>
     {{else}}
         <p style="text-align: center;">Your cart is empty.</p>
     {{/if}}
+
+    <script>
+        async function updateQuantity(bookISBN, delta) {
+            const currentQuantity = parseInt(document.getElementById(`quantity-${bookISBN}`).textContent, 10);
+            const newQuantity = currentQuantity + delta;
+
+            if (newQuantity <= 0) {
+                removeFromCart(bookISBN);
+                return;
+            }
+
+            fetch('/customer/addcart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bookISBN, quantity: newQuantity }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`quantity-${bookISBN}`).textContent = newQuantity;
+                } else {
+                    alert(data.message || "Failed to update quantity.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        async function removeFromCart(bookISBN) {
+            fetch('/customer/addcart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bookISBN }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Failed to remove item.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        async function buyNow() {
+            try {
+                const response = await fetch("/customer/buy", { method: "POST" });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Purchase completed successfully!");
+                    window.location.href = "/customer/buy"; // 구매 요약 페이지로 이동
+                } else {
+                    alert(result.message || "Purchase failed.");
+                }
+            } catch (error) {
+                console.error("Error purchasing books:", error);
+                alert("Failed to complete purchase. Please try again.");
+            }
+        }
+
+        // Buy Now 버튼 클릭 이벤트 등록
+        document.getElementById("purchaseButton").addEventListener("click", buyNow);
+    </script>
 </body>
 </html>
