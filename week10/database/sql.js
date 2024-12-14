@@ -109,6 +109,23 @@
             const [result] = await promisePool.query(sql);
             return result;
         },
+        getCartItems: async (userEmail) => {
+            const sql = `
+                SELECT C.Book_ISBN, B.Title, B.Price, C.Number
+                FROM Contains C
+                JOIN Book B ON C.Book_ISBN = B.ISBN
+                WHERE C.Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ?
+                );
+            `;
+            try {
+                const [rows] = await promisePool.query(sql, [userEmail]);
+                return rows;
+            } catch (error) {
+                console.error("Error in getCartItems:", error);
+                throw error;
+            }
+        },
     };
 
     export const createSql = {
@@ -198,6 +215,20 @@
             const [result] = await promisePool.query(sql, [data.userEmail, data.bookId, data.pickupTime]);
             return result;
         },
+        addToCart: async (data) => {
+            const sql = `
+                INSERT INTO Contains (Book_ISBN, Shopping_basket_BasketID, Number)
+                VALUES (?, 
+                    (SELECT BasketID FROM Shopping_basket WHERE User_Email = ? LIMIT 1), 
+                    1
+                )
+                ON DUPLICATE KEY UPDATE Number = Number + 1;
+            `;
+            const [result] = await promisePool.query(sql, [data.bookISBN, data.userEmail]);
+            return result;
+        },
+        
+        
         
     };
 
@@ -295,6 +326,17 @@
             const [result] = await promisePool.query(sql, [data.pickupTime, data.reservationId]);
             return result;
         },
+        updateCartQuantity: async (data) => {
+            const sql = `
+                UPDATE Contains
+                SET Number = ?
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ? LIMIT 1
+                );
+            `;
+            const [result] = await promisePool.query(sql, [data.newQuantity, data.bookISBN, data.userEmail]);
+            return result;
+        },
     };
 
     export const deleteSql = {
@@ -340,6 +382,16 @@
                 WHERE ID = ?
             `;
             const [result] = await promisePool.query(sql, [reservationId]);
+            return result;
+        },
+        deleteCartItem: async (data) => {
+            const sql = `
+                DELETE FROM Contains
+                WHERE Book_ISBN = ? AND Shopping_basket_BasketID = (
+                    SELECT BasketID FROM Shopping_basket WHERE User_Email = ? LIMIT 1
+                );
+            `;
+            const [result] = await promisePool.query(sql, [data.bookISBN, data.userEmail]);
             return result;
         },
     };

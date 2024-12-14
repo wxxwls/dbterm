@@ -11,6 +11,7 @@ import admindeleteRouter from '../routes/admindelete'; // 경로 수정
 import customerRouter from '../routes/customer';
 import bookSearchRouter from '../routes/bookSearch';
 import reservationRouter from '../routes/reservation';
+import addcartRouter from '../routes/addcart';
 
 
 const PORT = 3000;
@@ -44,6 +45,7 @@ app.use('/admin', admindeleteRouter); // /admin/insert 경로에 admininsertRout
 app.use('/customer', customerRouter);
 app.use('/customer', bookSearchRouter);
 app.use('/customer', reservationRouter);
+app.use('/customer', addcartRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
