@@ -19,7 +19,16 @@ router.post("/buy", async (req, res) => {
         if (!cartItems.length) {
             return res.json({ success: false, message: "Your cart is empty." });
         }
-
+        // 재고 확인
+        for (const item of cartItems) {
+            const bookStock = await selectSql.getBookStock(item.Book_ISBN); // 책의 현재 재고 가져오기
+            if (bookStock < item.Number) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Not enough stock for "${item.Title}". Available: ${bookStock}, Requested: ${item.Number}`,
+                });
+            }
+        }
         // Inventory 업데이트
         for (const item of cartItems) {
             console.log(`Updating stock for ISBN: ${item.Book_ISBN}, Quantity: ${item.Number}`);

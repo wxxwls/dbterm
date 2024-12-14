@@ -49,25 +49,69 @@
             return result;
         },  
         searchBookByTitle: async (title) => {
-            const sql = `SELECT * FROM Book WHERE Title LIKE ?`;
-            const [result] = await promisePool.query(sql, [`%${title}%`]);
-            return result;
+            const sql = `
+                SELECT 
+                    B.ISBN,
+                    MAX(B.Title) AS Title,
+                    MAX(B.Category) AS Category,
+                    MAX(B.Year) AS Year,
+                    MAX(B.Price) AS Price,
+                    IFNULL(SUM(I.Number), 0) AS Total_Stock
+                FROM 
+                    Book B
+                LEFT JOIN 
+                    Inventory I ON B.ISBN = I.Book_ISBN
+                WHERE 
+                    B.Title LIKE ?
+                GROUP BY 
+                    B.ISBN;
+            `;
+            const [rows] = await promisePool.query(sql, [`%${title}%`]);
+            return rows;
         },
         searchBookByAuthorName: async (authorName) => {
             const sql = `
-                SELECT B.* 
-                FROM Book B 
-                JOIN Author A ON B.Author_ID = A.ID 
-                WHERE A.Name LIKE ?`;
+                SELECT 
+                    B.ISBN,
+                    MAX(B.Title) AS Title,
+                    MAX(B.Category) AS Category,
+                    MAX(B.Year) AS Year,
+                    MAX(B.Price) AS Price,
+                    IFNULL(SUM(I.Number), 0) AS Total_Stock
+                FROM 
+                    Book B
+                JOIN 
+                    Author A ON B.Author_ID = A.ID
+                LEFT JOIN 
+                    Inventory I ON B.ISBN = I.Book_ISBN
+                WHERE 
+                    A.Name LIKE ?
+                GROUP BY 
+                    B.ISBN;
+            `;
             const [result] = await promisePool.query(sql, [`%${authorName}%`]);
             return result;
         },
         searchBookByAwardName: async (awardName) => {
             const sql = `
-                SELECT B.* 
-                FROM Book B 
-                JOIN Award AW ON B.ISBN = AW.Book_ISBN 
-                WHERE AW.Name LIKE ?`;
+                SELECT 
+                    B.ISBN,
+                    MAX(B.Title) AS Title,
+                    MAX(B.Category) AS Category,
+                    MAX(B.Year) AS Year,
+                    MAX(B.Price) AS Price,
+                    IFNULL(SUM(I.Number), 0) AS Total_Stock
+                FROM 
+                    Book B
+                JOIN 
+                    Award AW ON B.ISBN = AW.Book_ISBN
+                LEFT JOIN 
+                    Inventory I ON B.ISBN = I.Book_ISBN
+                WHERE 
+                    AW.Name LIKE ?
+                GROUP BY 
+                    B.ISBN;
+            `;
             const [result] = await promisePool.query(sql, [`%${awardName}%`]);
             return result;
         },
