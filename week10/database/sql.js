@@ -90,6 +90,25 @@
             const [result] = await promisePool.query(sql, [email]);
             return result;
         },
+        getBooknumber: async () => {
+            const sql = `
+                SELECT 
+                    B.ISBN,
+                    MAX(B.Title) AS Title, 
+                    MAX(B.Category) AS Category, 
+                    MAX(B.Year) AS Year, 
+                    MAX(B.Price) AS Price,
+                    IFNULL(SUM(I.Number), 0) AS Total_Stock
+                FROM 
+                    Book B
+                LEFT JOIN 
+                    Inventory I ON B.ISBN = I.Book_ISBN
+                GROUP BY 
+                    B.ISBN;
+            `;
+            const [result] = await promisePool.query(sql);
+            return result;
+        },
     };
 
     export const createSql = {
@@ -179,6 +198,7 @@
             const [result] = await promisePool.query(sql, [data.userEmail, data.bookId, data.pickupTime]);
             return result;
         },
+        
     };
 
     export const updateSql = {
