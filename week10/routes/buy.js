@@ -30,13 +30,43 @@ router.post("/buy", async (req, res) => {
             }
         }
         // Inventory 업데이트
-        for (const item of cartItems) {
-            console.log(`Updating stock for ISBN: ${item.Book_ISBN}, Quantity: ${item.Number}`);
-            await updateSql.updatestock({
-                quantity: item.Number,
-                bookISBN: item.Book_ISBN,
-            });
-        }
+       // 기존 코드 중에서 재고 확인 및 업데이트 부분
+for (const item of cartItems) {
+    const bookStock = await selectSql.getBookStock(item.Book_ISBN); // 책의 현재 재고 가져오기
+    if (bookStock < item.Number) {
+        return res.status(400).json({
+            success: false,
+            message: `Not enough stock for "${item.Title}". Available: ${bookStock}, Requested: ${item.Number}`,
+        });
+    }
+}
+
+// 여기에 새로운 로직을 추가합니다.
+for (const item of cartItems) {
+    let remainingQuantity = item.Number; // 구매 수량
+    const warehouses = await selectSql.getInventoryByBookISBN(item.Book_ISBN); // 각 창고별 재고 정보 가져오기
+
+    for (const warehouse of warehouses) {
+        if (remainingQuantity <= 0) break; // 필요한 수량만큼 줄였다면 종료
+
+        const reduceQuantity = Math.min(warehouse.Number, remainingQuantity); // 줄일 수 있는 최대 수량
+        await updateSql.updateInventory({
+            Book_ISBN: item.Book_ISBN,
+            Warehouse_Code: warehouse.Warehouse_Code,
+            Number: warehouse.Number - reduceQuantity,
+        });
+
+        remainingQuantity -= reduceQuantity; // 남은 수량 업데이트
+    }
+
+    if (remainingQuantity > 0) {
+        return res.status(400).json({
+            success: false,
+            message: `Not enough stock for Book ISBN: ${item.Book_ISBN}`,
+        });
+    }
+}
+
 
         // 구매 요약 정보를 세션에 저장
         req.session.purchaseSummary = {

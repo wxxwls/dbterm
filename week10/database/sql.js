@@ -179,6 +179,17 @@
             const [rows] = await promisePool.query(sql, [bookISBN]);
             return rows[0].Stock;
         },
+        getInventoryByBookISBN: async (bookISBN) => {
+            const sql = `
+                SELECT Warehouse_Code, Number
+                FROM Inventory
+                WHERE Book_ISBN = ?
+                ORDER BY Number DESC; 
+            `;
+            const [result] = await promisePool.query(sql, [bookISBN]);
+            return result;
+        },
+        
         
     };
 
