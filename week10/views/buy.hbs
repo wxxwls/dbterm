@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 0;
+            margin: 0;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .summary {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .summary p, .summary ul {
+            margin: 10px 0;
+        }
+        .book-list {
+            list-style: none;
+            padding: 0;
+        }
+        .book-list li {
+            background: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{title}}</h1>
+    <div class="summary">
+        <p><strong>Purchase Date:</strong> {{date}}</p>
+        <p><strong>Total Amount:</strong> ${{total}}</p>
+        <h3>Purchased Items:</h3>
+        <ul class="book-list">
+            {{#each cartItems}}
+            <li>
+                <strong>Title:</strong> {{Title}}<br>
+                <strong>Price:</strong> ${{Price}}<br>
+                <strong>Quantity:</strong> {{Number}}
+            </li>
+            {{/each}}
+        </ul>
+        
+        <p>Thank you for your purchase!</p>
+    </div>
+</body>
+</html>
