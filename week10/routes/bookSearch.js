@@ -64,4 +64,23 @@ router.post("/reservation", checkLoggedIn, async (req, res) => {
     }
 });
 
+router.post("/addToCart", checkLoggedIn, async (req, res) => {
+    const { bookId } = req.body; // 책 ID
+    const userEmail = req.session.user.id; // 사용자 이메일
+
+    const books = await selectSql.getBooknumber();
+    const book = books.find((b) => b.ISBN === bookId);
+
+    if (!book || book.Total_Stock <= 0) {
+        return res.json({ success: false, message: "Book out of stock." });
+    }
+
+    try {
+        await createSql.addToCart({ bookISBN: bookId, userEmail });
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error adding to cart:", error);
+        res.json({ success: false, message: "Failed to add to cart." });
+    }
+});
 export default router;
